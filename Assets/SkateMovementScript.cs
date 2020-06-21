@@ -44,7 +44,8 @@ public class SkateMovementScript : MonoBehaviour
                 {
                     rb.AddForceAtPosition(currentWheel.transform.up * UpForce * (1f - (hit.distance / HoverHeight)),
                         currentWheel.transform.position);
-                    Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.TransformDirection(-currentWheel.transform.up) * hit.distance, Color.yellow);
+                    Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.yellow);
+                    //Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.TransformDirection(-currentWheel.transform.up) * hit.distance, Color.yellow);
                     allHit.Add(true);
                 }
                 else
@@ -67,17 +68,27 @@ public class SkateMovementScript : MonoBehaviour
         else
         {
             rb.drag = initDrag/4;
+            for (var i = 0; i < Wheels.Length; i++)
+            {
+                var currentWheel = Wheels[i];
+                rb.AddForceAtPosition(-currentWheel.transform.up * UpForce,
+                    currentWheel.transform.position);
+            }
         }
-        
+
         // Push
         var turnForce = transform.rotation * new Vector3(Input.GetAxis("Horizontal") * TurnSpeed, 0, 0);
-        rb.AddForce(transform.rotation * new Vector3(0, -Input.GetAxis("Vertical") * PushSpeed, 0));
+        
         if (!grindbtnKey)
         {
+            rb.AddForce(transform.rotation * new Vector3(0, -Input.GetAxis("Vertical") * PushSpeed, 0));
             rb.AddForce(turnForce / 10);
             rb.AddForceAtPosition(turnForce, Rudder.transform.position);
         }
-
+        else
+        {
+            rb.AddForce(transform.rotation * new Vector3(0, -Input.GetAxis("Vertical") * PushSpeed/4, 0));
+        }
         // Jump
         if (Input.GetKey(KeyCode.Space) && allHit.AsQueryable().All(x=> x) && !grindbtnKey)
         {
@@ -92,11 +103,11 @@ public class SkateMovementScript : MonoBehaviour
             //rb.AddForceAtPosition(transform.forward * JumpForce, Wheels[3].transform.position);
         }
 
-        if (Quaternion.Angle(transform.rotation, Quaternion.LookRotation(Vector3.forward, Vector3.up)) > 180)
-        {
-            //rb.angularVelocity = -rb.angularVelocity/2;
-            //rb.MoveRotation(Quaternion.LookRotation(Vector3.forward, Vector3.up));
-        }
+        //if (Quaternion.Angle(transform.rotation, Quaternion.LookRotation(Vector3.up, Vector3.forward)) > 90)
+        //{
+        //    rb.angularVelocity = -rb.angularVelocity/2;
+        //    rb.MoveRotation(Quaternion.LookRotation(Vector3.up, Vector3.forward));
+        //}
         if(!allHit.AsQueryable().All(x => x))
         {
             rb.angularVelocity = rb.angularVelocity * .5f;
