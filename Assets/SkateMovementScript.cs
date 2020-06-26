@@ -5,12 +5,18 @@ using UnityEngine;
 
 public class SkateMovementScript : MonoBehaviour
 {
+    public GameObject Skater;
+
     public GameObject Rudder;
     public GameObject JumpPoint;
     public GameObject[] Wheels;    
 
     public float HoverHeight;
     public float UpForce;
+    /// <summary>
+    /// For going down when grinding
+    /// </summary>
+    public float DownForce;
     public float JumpForce;
     public float PushSpeed;
     public float TurnSpeed;
@@ -19,13 +25,15 @@ public class SkateMovementScript : MonoBehaviour
     private bool JumpCooldown;
     private Rigidbody rb;
     private float initDrag;
-
+    private float initAngDrag;
+    
     // Start is called before the first frame update
     void Start()
     {
         HoverLayerMask = ~LayerMask.GetMask("Player");
         rb = GetComponent<Rigidbody>();
         initDrag = rb.drag;
+        initAngDrag = rb.angularDrag;
     }
 
     void FixedUpdate()
@@ -37,9 +45,12 @@ public class SkateMovementScript : MonoBehaviour
         if (!grindbtnKey)
         {
             rb.drag = initDrag;
+            rb.angularDrag = initAngDrag;
             for (var i = 0; i < Wheels.Length; i++)
             {
+                
                 var currentWheel = Wheels[i];
+                Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.up *1000, Color.green);
                 if (Physics.Raycast(currentWheel.transform.position, -currentWheel.transform.up, out hit, HoverHeight, HoverLayerMask))
                 {
                     rb.AddForceAtPosition(currentWheel.transform.up * UpForce * (1f - (hit.distance / HoverHeight)),
@@ -53,13 +64,13 @@ public class SkateMovementScript : MonoBehaviour
                     allHit.Add(false);
                     if (transform.position.y > currentWheel.transform.position.y)
                     {
-                        rb.AddForceAtPosition(currentWheel.transform.up * UpForce,
-                        currentWheel.transform.position);
+                        //rb.AddForceAtPosition(currentWheel.transform.up * UpForce/10 * (1f - (hit.distance / HoverHeight)),
+                        //currentWheel.transform.position);
                     }
                     else
                     {
-                        //rb.AddForceAtPosition(-currentWheel.transform.up * UpForce/10,
-                        //currentWheel.transform.position);
+                        rb.AddForceAtPosition(-currentWheel.transform.up * UpForce/100 * (1f - (hit.distance / HoverHeight)),
+                        currentWheel.transform.position);
                     }
 
                 }
@@ -68,10 +79,11 @@ public class SkateMovementScript : MonoBehaviour
         else
         {
             rb.drag = initDrag/4;
+            rb.angularDrag = 0;
             for (var i = 0; i < Wheels.Length; i++)
             {
                 var currentWheel = Wheels[i];
-                rb.AddForceAtPosition(-currentWheel.transform.up * UpForce,
+                rb.AddForceAtPosition(-currentWheel.transform.up * DownForce,
                     currentWheel.transform.position);
             }
         }
@@ -81,25 +93,32 @@ public class SkateMovementScript : MonoBehaviour
         
         if (!grindbtnKey)
         {
-            rb.AddForce(transform.rotation * new Vector3(0, -Input.GetAxis("Vertical") * PushSpeed, 0));
+            var push = transform.rotation * new Vector3(0, 0, -Input.GetAxis("Vertical") * PushSpeed);
+            if (!allHit.AsQueryable().All(x => x))
+            {
+                push /= 2;
+            }
+            rb.AddForce(push);
             rb.AddForce(turnForce / 10);
             rb.AddForceAtPosition(turnForce, Rudder.transform.position);
+            
         }
         else
         {
-            rb.AddForce(transform.rotation * new Vector3(0, -Input.GetAxis("Vertical") * PushSpeed/4, 0));
+            rb.AddForce(turnForce);
+            rb.AddForce(transform.rotation * new Vector3(0, -Input.GetAxis("Vertical") * PushSpeed / 4), 0);
         }
         // Jump
         if (Input.GetKey(KeyCode.Space) && allHit.AsQueryable().All(x=> x) && !grindbtnKey)
         {
-            
-            //rb.AddForce(transform.forward * JumpForce);
+
+            //rb.AddForce(transform.up * JumpForce);
             for (var i = 0; i < Wheels.Length; i++)
             {
                 var currentWheel = Wheels[i];
-                rb.AddForceAtPosition(transform.forward * JumpForce, currentWheel.transform.position);
+                rb.AddForceAtPosition(currentWheel.transform.up * JumpForce, currentWheel.transform.position);
             }
-                
+
             //rb.AddForceAtPosition(transform.forward * JumpForce, Wheels[3].transform.position);
         }
 
@@ -110,13 +129,26 @@ public class SkateMovementScript : MonoBehaviour
         //}
         if(!allHit.AsQueryable().All(x => x))
         {
-            rb.angularVelocity = rb.angularVelocity * .5f;
+            //rb.angularVelocity = rb.angularVelocity * .5f;
+
+            var targetDirection = (transform.position - transform.position).normalized;
+            var targetRotation = Quaternion.LookRotation(transform.forward, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime);
         }
 
-        if(Quaternion.Angle(Quaternion.LookRotation(Vector3.forward, Vector3.down), transform.rotation)<30)
+        if(Vector3.Angle(Vector3.down, -transform.up)>90 && 
+            Physics.Raycast(transform.position, -Vector3.up, out hit, HoverHeight/2, HoverLayerMask))
         {
-            transform.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
-            transform.position += Vector3.up * 2;
+            Crash();
         }
     }
+
+
+    public void Crash()
+    {
+        Skater.transform.parent = null;
+
+    }
 }
+
+
