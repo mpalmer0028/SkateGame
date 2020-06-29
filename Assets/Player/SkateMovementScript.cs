@@ -46,6 +46,7 @@ public class SkateMovementScript : MonoBehaviour
         {
             rb.drag = initDrag;
             rb.angularDrag = initAngDrag;
+            var wheelHeights = NormalizeData(Wheels.AsQueryable().Select(x => (double)x.transform.position.y).ToArray<double>(), 0, UpForce);
             for (var i = 0; i < Wheels.Length; i++)
             {
                 
@@ -62,17 +63,20 @@ public class SkateMovementScript : MonoBehaviour
                 else
                 {
                     allHit.Add(false);
-                    if (transform.position.y > currentWheel.transform.position.y)
-                    {
-                        //rb.AddForceAtPosition(currentWheel.transform.up * UpForce/10 * (1f - (hit.distance / HoverHeight)),
-                        //currentWheel.transform.position);
-                    }
-                    else
-                    {
-                        rb.AddForceAtPosition(-currentWheel.transform.up * UpForce/100 * (1f - (hit.distance / HoverHeight)),
-                        currentWheel.transform.position);
-                    }
 
+                    //if (transform.position.y > currentWheel.transform.position.y)
+                    //{
+                    //    rb.AddForceAtPosition(currentWheel.transform.up * (UpForce - (float)wheelHeights[i]) / 100,
+                    //    currentWheel.transform.position);
+                    //}
+                    //else
+                    //{
+                    //    rb.AddForceAtPosition(-currentWheel.transform.up * UpForce/100 * (1f - (hit.distance / HoverHeight)),
+                    //    currentWheel.transform.position);
+                    //}
+
+                    rb.AddForceAtPosition(currentWheel.transform.up * ((UpForce * .5f) - (float)wheelHeights[i]) / 50,
+                            currentWheel.transform.position);
                 }
             }
         }
@@ -148,6 +152,18 @@ public class SkateMovementScript : MonoBehaviour
     {
         Skater.transform.parent = null;
 
+    }
+
+    private static double[] NormalizeData(IEnumerable<double> data, double min, double max)
+    {
+        double dataMax = data.Max();
+        double dataMin = data.Min();
+        double range = dataMax - dataMin;
+
+        return data
+            .Select(d => (d - dataMin) / range)
+            .Select(n => (double)((1 - n) * min + n * max))
+            .ToArray();
     }
 }
 
