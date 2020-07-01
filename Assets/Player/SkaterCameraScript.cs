@@ -21,8 +21,8 @@ public class SkaterCameraScript : MonoBehaviour
         transform.LookAt(AimTarget.transform);
         
         transform.position = new Vector3(
-            Mathf.Lerp(LocationTarget.transform.position.x, transform.position.x, .01f),
+            Mathf.Lerp(LocationTarget.transform.position.x, transform.position.x, .1f),
             Mathf.Lerp(LocationTarget.transform.position.y, transform.position.y, .05f),
-            Mathf.Lerp(LocationTarget.transform.position.z, transform.position.z, .01f));
+            Mathf.Lerp(LocationTarget.transform.position.z, transform.position.z, .1f));
     }
 }

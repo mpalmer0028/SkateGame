@@ -154,7 +154,7 @@ public class SkateMovementScript : MonoBehaviour
 
     }
 
-    private static double[] NormalizeData(IEnumerable<double> data, double min, double max)
+    public static double[] NormalizeData(IEnumerable<double> data, double min, double max)
     {
         double dataMax = data.Max();
         double dataMin = data.Min();

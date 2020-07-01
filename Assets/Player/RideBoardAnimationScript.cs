@@ -8,6 +8,10 @@ public class RideBoardAnimationScript : MonoBehaviour
     public GameObject Spine;
     public GameObject Camera;
     public float HeightOfLookPoint;
+    public float LookPointRotX;
+    public float LookPointRotY;
+    public float LookPointRotZ;
+    public float LookPointRotW;
     private Quaternion InitSpineRotation;
 
     // Start is called before the first frame update
@@ -29,6 +33,7 @@ public class RideBoardAnimationScript : MonoBehaviour
         //rotation.eulerAngles = e;
         //spineT.rotation = rotation;
 
-        spineT.LookAt(((cameraT.position - boardT.position) * -1 + boardT.position) + new Vector3(0,HeightOfLookPoint,0), Vector3.up);
+        //spineT.LookAt(((cameraT.position - boardT.position) * -1 + boardT.position) + new Vector3(0,HeightOfLookPoint,0), Vector3.up);
+        //spineT.rotation *= new Quaternion(LookPointRotX, LookPointRotY, LookPointRotZ, LookPointRotW);
     }
 }
