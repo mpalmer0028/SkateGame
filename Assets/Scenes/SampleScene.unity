@@ -1164,6 +1164,21 @@ PrefabInstance:
       propertyPath: Camera
       value: 
       objectReference: {fileID: 1611316357}
+    - target: {fileID: 4703060200604517751, guid: 331d45c6990837e4fb9e3ffd134ef088,
+        type: 3}
+      propertyPath: ShapeModule.m_Scale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4703060200604517751, guid: 331d45c6990837e4fb9e3ffd134ef088,
+        type: 3}
+      propertyPath: ShapeModule.m_Position.y
+      value: -21
+      objectReference: {fileID: 0}
+    - target: {fileID: 4703060200604517751, guid: 331d45c6990837e4fb9e3ffd134ef088,
+        type: 3}
+      propertyPath: ShapeModule.m_Position.z
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 7578339554267696620, guid: 331d45c6990837e4fb9e3ffd134ef088,
         type: 3}
       propertyPath: m_LocalPosition.x

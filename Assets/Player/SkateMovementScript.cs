@@ -13,6 +13,8 @@ public class SkateMovementScript : MonoBehaviour
 
     public float HoverHeight;
     public float UpForce;
+    public float AntiBottomOutForce;
+    public float AntiBottomOutDistance;
     /// <summary>
     /// For going down when grinding
     /// </summary>
@@ -27,6 +29,7 @@ public class SkateMovementScript : MonoBehaviour
     private float initDrag;
     private float initAngDrag;
     
+
     // Start is called before the first frame update
     void Start()
     {
@@ -51,12 +54,24 @@ public class SkateMovementScript : MonoBehaviour
             {
                 
                 var currentWheel = Wheels[i];
-                Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.up *1000, Color.green);
+                //Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.up *1000, Color.green);
                 if (Physics.Raycast(currentWheel.transform.position, -currentWheel.transform.up, out hit, HoverHeight, HoverLayerMask))
                 {
-                    rb.AddForceAtPosition(currentWheel.transform.up * UpForce * (1f - (hit.distance / HoverHeight)),
+                    
+
+                    // Add more force to prevent bottoming out
+                    if(hit.distance > AntiBottomOutDistance)
+                    {
+                        rb.AddForceAtPosition(currentWheel.transform.up * UpForce * (1f - (hit.distance / HoverHeight)),
                         currentWheel.transform.position);
-                    Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.yellow);
+                        Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.yellow);
+                    }
+                    else
+                    {
+                        rb.AddForceAtPosition(currentWheel.transform.up * AntiBottomOutForce, currentWheel.transform.position);
+                        Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.black);
+                    }
+                    
                     //Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.TransformDirection(-currentWheel.transform.up) * hit.distance, Color.yellow);
                     allHit.Add(true);
                 }
