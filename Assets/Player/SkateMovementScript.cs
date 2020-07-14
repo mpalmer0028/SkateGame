@@ -10,6 +10,8 @@ public class SkateMovementScript : MonoBehaviour
     public GameObject Rudder;
     public GameObject JumpPoint;
     public GameObject[] Wheels;    
+    public GameObject[] TrainingWheels;    
+    public GameObject[] LightTrainingWheels;    
 
     public float HoverHeight;
     public float UpForce;
@@ -28,7 +30,12 @@ public class SkateMovementScript : MonoBehaviour
     private Rigidbody rb;
     private float initDrag;
     private float initAngDrag;
-    
+    public bool shouldResetRotation;
+    private Quaternion resetRotation;
+    private float resetRotationI = 0;
+    private Quaternion startResetRotation;
+    private bool hitGround;
+
 
     // Start is called before the first frame update
     void Start()
@@ -45,6 +52,7 @@ public class SkateMovementScript : MonoBehaviour
         // Hover
         RaycastHit hit;
         var allHit = new List<bool>();
+
         if (!grindbtnKey)
         {
             rb.drag = initDrag;
@@ -94,6 +102,55 @@ public class SkateMovementScript : MonoBehaviour
                             currentWheel.transform.position);
                 }
             }
+
+            // Training Wheels
+            if (Quaternion.Angle(transform.rotation, Quaternion.LookRotation(transform.forward, Vector3.up)) > 80)
+            {
+                for (var i = 0; i < TrainingWheels.Length; i++)
+                {
+                    var currentWheel = TrainingWheels[i];
+                    Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * 1, Color.red);
+                    if (Physics.Raycast(currentWheel.transform.position, -currentWheel.transform.up, out hit, HoverHeight / 2, HoverLayerMask))
+                    {
+                        // Add more force to prevent bottoming out
+                        if (hit.distance > AntiBottomOutDistance)
+                        {
+                            rb.AddForceAtPosition(currentWheel.transform.up * UpForce *20* (1f - (hit.distance / HoverHeight)),
+                            currentWheel.transform.position);
+                            Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.yellow);
+                        }
+                        else
+                        {
+                            rb.AddForceAtPosition(currentWheel.transform.up * AntiBottomOutForce / 2, currentWheel.transform.position);
+                            Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.black);
+                        }
+                    }
+                }
+            }
+
+            // Light Training Wheels
+            //for (var i = 0; i < LightTrainingWheels.Length; i++)
+            //{
+            //    var currentWheel = LightTrainingWheels[i];
+            //    //Debug.DrawRay(currentWheel.transform.position, currentWheel.transform.up *1000, Color.green);
+            //    if (Physics.Raycast(currentWheel.transform.position, -currentWheel.transform.up, out hit, HoverHeight, HoverLayerMask))
+            //    {
+            //        // Add more force to prevent bottoming out
+            //        if (hit.distance > AntiBottomOutDistance)
+            //        {
+            //            rb.AddForceAtPosition(currentWheel.transform.up * UpForce*2 * (1f - (hit.distance / HoverHeight)),
+            //            currentWheel.transform.position);
+            //            Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.yellow);
+            //        }
+            //        else
+            //        {
+            //            rb.AddForceAtPosition(currentWheel.transform.up * AntiBottomOutForce, currentWheel.transform.position);
+            //            Debug.DrawRay(currentWheel.transform.position, -currentWheel.transform.up * hit.distance, Color.black);
+            //        }
+
+            //    }
+
+            //}
         }
         else
         {
@@ -108,19 +165,24 @@ public class SkateMovementScript : MonoBehaviour
         }
 
         // Push
-        var turnForce = transform.rotation * new Vector3(Input.GetAxis("Horizontal") * TurnSpeed, 0, 0);
+        var turnForce = transform.rotation * new Vector3(-Input.GetAxis("Horizontal") * TurnSpeed, 0, 0);
         
         if (!grindbtnKey)
         {
             var push = transform.rotation * new Vector3(0, 0, -Input.GetAxis("Vertical") * PushSpeed);
             if (!allHit.AsQueryable().All(x => x))
             {
-                push /= 2;
+                //push /= 2;
             }
             rb.AddForce(push);
             rb.AddForce(turnForce / 10);
             rb.AddForceAtPosition(turnForce, Rudder.transform.position);
-            
+            Debug.DrawLine(
+                Rudder.transform.position,
+                Rudder.transform.position + turnForce, 
+                Color.green
+            );
+
         }
         else
         {
@@ -132,13 +194,14 @@ public class SkateMovementScript : MonoBehaviour
         {
 
             //rb.AddForce(transform.up * JumpForce);
-            for (var i = 0; i < Wheels.Length; i++)
-            {
-                var currentWheel = Wheels[i];
-                rb.AddForceAtPosition(currentWheel.transform.up * JumpForce, currentWheel.transform.position);
-            }
+            //for (var i = 0; i < Wheels.Length; i++)
+            //{
+            //    var currentWheel = Wheels[i];
+            //    //rb.AddForceAtPosition(currentWheel.transform.up * JumpForce, currentWheel.transform.position);
+            //    rb.AddForceAtPosition(Vector3.up * JumpForce, currentWheel.transform.position);
+            //}
 
-            //rb.AddForceAtPosition(transform.forward * JumpForce, Wheels[3].transform.position);
+            rb.AddForce(transform.up * JumpForce);
         }
 
         //if (Quaternion.Angle(transform.rotation, Quaternion.LookRotation(Vector3.up, Vector3.forward)) > 90)
@@ -146,20 +209,38 @@ public class SkateMovementScript : MonoBehaviour
         //    rb.angularVelocity = -rb.angularVelocity/2;
         //    rb.MoveRotation(Quaternion.LookRotation(Vector3.up, Vector3.forward));
         //}
-        if(!allHit.AsQueryable().All(x => x))
+        if(!allHit.AsQueryable().All(x => x) && Vector3.Angle(Vector3.down, -transform.up) > 89 &&
+            Physics.Raycast(transform.position, -Vector3.up, out hit, HoverHeight / 2, HoverLayerMask))
         {
             //rb.angularVelocity = rb.angularVelocity * .5f;
 
-            var targetDirection = (transform.position - transform.position).normalized;
-            var targetRotation = Quaternion.LookRotation(transform.forward, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime);
+            shouldResetRotation = hitGround;
+            resetRotation = Quaternion.LookRotation(transform.forward, Vector3.up);
+            startResetRotation = transform.rotation;
+            //var targetDirection = (transform.position - transform.position).normalized;
+            //var targetRotation = Quaternion.LookRotation(transform.forward, Vector3.up);
+            //transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime);
         }
-
-        if(Vector3.Angle(Vector3.down, -transform.up)>90 && 
-            Physics.Raycast(transform.position, -Vector3.up, out hit, HoverHeight/2, HoverLayerMask))
+        if (allHit.AsQueryable().All(x => x))
         {
-            Crash();
+            hitGround = true;
         }
+        if (shouldResetRotation)
+        {
+            transform.rotation = Quaternion.Lerp(startResetRotation, resetRotation, resetRotationI);
+            rb.angularVelocity = Vector3.zero;
+            resetRotationI += .01f;
+            if (resetRotationI > 1)
+            {
+                shouldResetRotation = false;
+                hitGround = false;
+            }
+        }
+        //if (Vector3.Angle(Vector3.down, -transform.up)>90 && 
+        //    Physics.Raycast(transform.position, -Vector3.up, out hit, HoverHeight/2, HoverLayerMask))
+        //{
+        //    Crash();
+        //}
     }
 
 
