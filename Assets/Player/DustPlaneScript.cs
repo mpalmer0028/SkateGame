@@ -28,7 +28,7 @@ public class DustPlaneScript : MonoBehaviour
         //shape = 
         if (Physics.Raycast(Board.transform.position, -Board.transform.up, out hit, HoverHeight))
         {
-            Debug.DrawRay(hit.point, Board.transform.up, Color.magenta);
+            //Debug.DrawRay(hit.point, Board.transform.up, Color.magenta);
             transform.rotation = Board.transform.rotation;
             transform.position = hit.point;
             transform.localScale = InitScale;
@@ -37,7 +37,7 @@ public class DustPlaneScript : MonoBehaviour
         {
             transform.position = Vector3.zero;
             transform.localScale = Vector3.zero;
-            Debug.DrawRay(Board.transform.position, Board.transform.up, Color.black);
+            //Debug.DrawRay(Board.transform.position, Board.transform.up, Color.black);
         }
     }
 }

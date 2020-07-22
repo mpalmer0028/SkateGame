@@ -4,10 +4,18 @@ using UnityEngine;
 
 public class GetUpScript : MonoBehaviour
 {
-    public GameObject Board;
+    //public GameObject Board;
     public GameObject PushUpPoint;
     public float PushUpForce;
-    public int HoverHeight;    
+    public int HoverHeight;
+
+    //values that will be set in the Inspector
+    public float RotationSpeed;
+
+    //values for internal use
+    private Quaternion _lookRotation;
+    private Vector3 _direction;
+
     private int HoverLayerMask;
     private RaycastHit hit;
     private Rigidbody rb;
@@ -16,18 +24,19 @@ public class GetUpScript : MonoBehaviour
     void Start()
     {
         HoverLayerMask = ~LayerMask.GetMask("Player");
-        rb = Board.GetComponent<Rigidbody>();
+        //rb = Board.GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.Space))
-        {            
-            if (Physics.Raycast(PushUpPoint.transform.position, -Vector3.up, out hit, HoverHeight, HoverLayerMask))
-            {
-                rb.AddForceAtPosition(Vector3.up * PushUpForce, PushUpPoint.transform.position, ForceMode.Impulse);
-            }
-        }
+        ////find the vector pointing from our position to the target
+        //_direction = (transform.position + Vector3.up).normalized;
+
+        ////create the rotation we need to be in to look at the target
+        //_lookRotation = Quaternion.LookRotation(_direction);
+
+        ////rotate us over time according to speed until we are in the required rotation
+        //transform.rotation = Quaternion.Slerp(transform.rotation, _lookRotation, Time.deltaTime * RotationSpeed);
     }
 }
